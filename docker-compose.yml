@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: jobportal_mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: jobportal_backend
+    restart: unless-stopped
+    env_file:
+      - ./server/.env.production
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+    volumes:
+      - ./server/uploads:/usr/src/app/uploads
+    networks:
+      - jobnet
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: jobportal_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    env_file:
+      - ./client/.env.production
+    depends_on:
+      - backend
+    networks:
+      - jobnet
+
+volumes:
+  mongo-data:
+
+networks:
+  jobnet:
+    driver: bridge
